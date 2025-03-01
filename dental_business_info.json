@@ -1,0 +1,54 @@
+{
+    "business_info": {
+        "name": "Consultorio Dental Laura",
+        "address": "Av. Principal 123, Buenos Aires",
+        "phone": "+54 11 1234-5678",
+        "email": "contacto@dentistalaura.com",
+        "working_hours": {
+            "monday": "09:00-18:00",
+            "tuesday": "09:00-18:00",
+            "wednesday": "09:00-18:00",
+            "thursday": "09:00-18:00",
+            "friday": "09:00-18:00",
+            "saturday": "Cerrado",
+            "sunday": "Cerrado"
+        }
+    },
+    "services": {
+        "Chequeo rutinario": {
+            "description": "Examen dental completo y limpieza básica",
+            "duration": "30 minutos",
+            "price": "5000 ARS"
+        },
+        "Limpieza": {
+            "description": "Limpieza dental profunda y eliminación de sarro",
+            "duration": "45 minutos",
+            "price": "7000 ARS"
+        },
+        "Extracción": {
+            "description": "Extracción dental simple",
+            "duration": "60 minutos",
+            "price": "10000 ARS"
+        },
+        "Ortodoncia": {
+            "description": "Consulta y tratamiento de ortodoncia",
+            "duration": "60 minutos",
+            "price": "15000 ARS"
+        }
+    },
+    "policies": {
+        "cancellation": "Se requiere aviso con 24 horas de anticipación para cancelaciones",
+        "payment_methods": [
+            "Efectivo",
+            "Tarjeta de crédito",
+            "Tarjeta de débito",
+            "Transferencia bancaria"
+        ],
+        "insurance": [
+            "OSDE",
+            "Swiss Medical",
+            "Galeno",
+            "Medifé"
+        ]
+    }
+}
