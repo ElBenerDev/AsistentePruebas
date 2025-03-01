@@ -1,7 +1,10 @@
-flask
-flask-cors
-requests
+fastapi
+uvicorn[standard]
 openai
 python-dotenv
 pytz
+requests
+pydantic
+flask
 gunicorn
+pydantic-settings

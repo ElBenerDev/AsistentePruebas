@@ -16,6 +16,7 @@ from enum import Enum
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 import httpx
+from .config import settings
 
 
 # Configuración básica
@@ -1060,6 +1061,64 @@ async def verify_api_connection():
     except Exception as e:
         logger.error(f"Error connecting to API: {str(e)}")
         return False
+
+async def send_whatsapp_message(recipient_id: str, message: str):
+    """Send message using WhatsApp Cloud API"""
+    if not settings.PHONE_NUMBER_ID:
+        raise ValueError("PHONE_NUMBER_ID is not set")
+    
+    url = f"https://graph.facebook.com/v17.0/{settings.PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {settings.WHATSAPP_TOKEN.strip()}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": recipient_id,
+        "type": "text",
+        "text": {"body": message}
+    }
+    
+    try:
+        logger.info(f"Sending WhatsApp message to {recipient_id}")
+        logger.debug(f"Request details - URL: {url}")
+        logger.debug(f"Headers (Auth token length): {len(str(settings.WHATSAPP_TOKEN))}")
+        
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        
+        logger.info(f"WhatsApp message sent successfully to {recipient_id}")
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error sending WhatsApp message: {str(e)}")
+        logger.error(f"Response status code: {e.response.status_code if hasattr(e, 'response') else 'N/A'}")
+        logger.error(f"Response content: {e.response.text if hasattr(e, 'response') else 'N/A'}")
+        raise
+
+async def handle_assistant_response(text: str, user_id: str):
+    try:
+        logger.info(f"Processing message for user {user_id}: {text}")
+        
+        # Get response from assistant
+        response = await dental_assistant.handle_message(user_id, text)
+        
+        if response and response.get("type") == "text":
+            response_text = response["content"]
+            logger.info(f"Assistant response: {response_text}")
+            
+            # Explicitly check environment variables before sending
+            if not settings.PHONE_NUMBER_ID or not settings.WHATSAPP_TOKEN:
+                raise ValueError("Missing required WhatsApp configuration")
+            
+            # Send the response via WhatsApp
+            await send_whatsapp_message(user_id, response_text)
+            
+            return response_text, None
+    except Exception as e:
+        error_msg = f"Error processing message: {str(e)}"
+        logger.error(error_msg)
+        return None, error_msg
 
 if __name__ == "__main__":
     async def main():

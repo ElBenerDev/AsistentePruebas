@@ -1,0 +1,16 @@
+runtime: python311
+instance_class: F1
+
+env_variables:
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  WHATSAPP_TOKEN: ${WHATSAPP_TOKEN}
+  PHONE_NUMBER_ID: ${PHONE_NUMBER_ID}
+  WEBHOOK_VERIFY_TOKEN: ${WEBHOOK_VERIFY_TOKEN}
+
+entrypoint: python -m uvicorn src.app:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 75
+
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 1
+  max_instances: 10
+  min_scale: 1  # Keep at least one instance warm
