@@ -1,0 +1,80 @@
+{
+    "evento": {
+        "nombre": "EtnoSur 2024",
+        "sitio_web": "etnosur.com",
+        "ubicacion": "Alcalá La Real",
+        "fechas": "18 al 21 de Julio de 2024"
+    },
+    "programacion": {
+        "jueves_viernes": {
+            "lugar": "Plaza del Ayuntamiento / Escenario Radio 3",
+            "artistas": [
+                {
+                    "nombre": "Queralt Lahoz",
+                    "horarios": ["22:30", "00:00"]
+                }
+            ]
+        },
+        "actividades_diarias": {
+            "talleres_infantiles": {
+                "hora": "10:00",
+                "lugar": "Plaza del Ayuntamiento",
+                "actividad": "Mandalas humanos",
+                "organizador": "Asociación R3creo",
+                "aforo": 50
+            }
+        },
+        "sabado": {
+            "escenario_etnosur": {
+                "artistas": [
+                    {
+                        "nombre": "Miguel Campello",
+                        "hora": "21:00"
+                    },
+                    {
+                        "nombre": "Systema Solar",
+                        "hora": "22:30"
+                    },
+                    {
+                        "nombre": "Jungle by Night",
+                        "hora": "00:30"
+                    }
+                ]
+            }
+        }
+    },
+    "precios": {
+        "por_hora": 3,
+        "noche": 15,
+        "viernes_sabado": 27,
+        "nota": "Horario nocturno: 22:00h – 04:00h"
+    },
+    "informacion_general": {
+        "acceso_talleres": [
+            "Llegar 1 hora antes para formar cola",
+            "Ticket por orden de llegada",
+            "Máximo dos tickets por persona en talleres familiares",
+            "Presentarse 15 minutos antes",
+            "Ticket obligatorio para acceder"
+        ],
+        "servicios": [
+            "Atrapasuetños",
+            "Etnomercado",
+            "Etnostand",
+            "Punto Violeta",
+            "Zona de comidas y descanso"
+        ],
+        "horarios_servicios": {
+            "ludoteca_nocturna": {
+                "lugar": "CEIP Alonso Alcalá",
+                "dias": ["Viernes", "Sábado"],
+                "horario": "22:00 - 04:00"
+            },
+            "mercado_paseo": {
+                "lugar": "Paseo de los Álamos",
+                "dias": ["Viernes", "Sábado", "Domingo"],
+                "horario": "10:00 - 20:00"
+            }
+        }
+    }
+}

@@ -8,6 +8,7 @@ load_dotenv()
 class Settings(BaseSettings):
     # Required settings
     OPENAI_API_KEY: str
+    ETNOSUR_ASSISTANT_ID: str | None = None  # Make it optional
     WHATSAPP_TOKEN: str
     PHONE_NUMBER_ID: str
     WEBHOOK_VERIFY_TOKEN: str

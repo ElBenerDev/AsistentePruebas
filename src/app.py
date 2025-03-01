@@ -3,18 +3,22 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import json
 import sys
+import httpx
 from .config import settings
-from .assistant_logic import initialize_assistant, handle_assistant_response  # Add this import
+from .assistant_logic import FestivalAssistant
 
-# Enhanced logging configuration
+# Setup logging
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger('whatsapp_bot')
+logger = logging.getLogger('etnosur_bot')
 
 app = FastAPI()
+
+# Store assistant instance in app state
+app.state.festival_assistant = None
 
 # Add CORS middleware
 app.add_middleware(
@@ -24,6 +28,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+async def send_whatsapp_message(recipient_id: str, message: str):
+    """Send message using WhatsApp Cloud API"""
+    if not settings.PHONE_NUMBER_ID:
+        raise ValueError("PHONE_NUMBER_ID is not set")
+    
+    url = f"https://graph.facebook.com/v17.0/{settings.PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {settings.WHATSAPP_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": recipient_id,
+        "type": "text",
+        "text": {"body": message}
+    }
+    
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        return response.json()
 
 @app.get("/")
 async def health_check():
@@ -39,16 +66,12 @@ async def verify_webhook(request: Request):
         token = request.query_params.get('hub.verify_token')
         challenge = request.query_params.get('hub.challenge')
         
-        logger.info(f"Webhook verification requested - Mode: {mode}, Token: {token}, Challenge: {challenge}")
-        
         if mode and token:
             if mode == 'subscribe' and token == settings.WEBHOOK_VERIFY_TOKEN:
-                logger.info("Webhook verified successfully")
                 return Response(content=challenge, media_type="text/plain")
-            logger.warning("Webhook verification failed - Invalid token")
         raise HTTPException(status_code=403, detail="Invalid verification token")
     except Exception as e:
-        logger.error(f"Error in verify_webhook: {str(e)}", exc_info=True)
+        logger.error(f"Error in verify_webhook: {str(e)}")
         raise
 
 @app.post("/webhook")
@@ -58,28 +81,36 @@ async def webhook(request: Request):
         body = await request.json()
         logger.info(f"Received webhook data: {json.dumps(body, indent=2)}")
         
-        # Extract message from WhatsApp payload
         if body.get("object") == "whatsapp_business_account":
             for entry in body.get("entry", []):
                 for change in entry.get("changes", []):
                     if messages := change.get("value", {}).get("messages", []):
                         message = messages[0]
                         if message.get("type") == "text":
-                            # Extract user ID and message text
                             user_id = message["from"]
                             text = message["text"]["body"]
                             
                             logger.info(f"Processing message from {user_id}: {text}")
                             
-                            # Process with assistant and get response
-                            response_text, error = await handle_assistant_response(text, user_id)
+                            # Use assistant from app state
+                            if app.state.festival_assistant is None:
+                                app.state.festival_assistant = FestivalAssistant()
                             
-                            if error:
-                                logger.error(f"Error: {error}")
+                            # Get response from assistant
+                            response = await app.state.festival_assistant.handle_message(user_id, text)
+                            
+                            if response["type"] == "text":
+                                # Send response back via WhatsApp
+                                await send_whatsapp_message(user_id, response["content"])
+                            else:
+                                logger.error(f"Error: {response['content']}")
+                                await send_whatsapp_message(
+                                    user_id, 
+                                    "Lo siento, ha ocurrido un error. ¿Podrías reformular tu pregunta?"
+                                )
                             
                             return {"status": "success"}
         
-        logger.info("No valid message found in webhook data")
         return {"status": "no_message"}
         
     except Exception as e:
@@ -91,10 +122,10 @@ async def startup_event():
     """Initialize the assistant when the app starts"""
     try:
         logger.info("Starting application initialization...")
-        await initialize_assistant()
+        app.state.festival_assistant = FestivalAssistant()
         logger.info("Assistant initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize assistant: {str(e)}", exc_info=True)
+        logger.error(f"Failed to initialize assistant: {str(e)}")
         raise
 
 @app.on_event("shutdown")
